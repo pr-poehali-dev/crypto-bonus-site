@@ -6,9 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
 import Icon from '@/components/ui/icon';
+import CryptoRain from '@/components/CryptoRain';
 
 export default function Index() {
   const [fromAmount, setFromAmount] = useState('1000');
@@ -118,7 +121,8 @@ export default function Index() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <CryptoRain />
       <header className="border-b border-border sticky top-0 bg-background/95 backdrop-blur z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -132,17 +136,75 @@ export default function Index() {
             <a href="#faq" className="text-sm hover:text-primary transition-colors">FAQ</a>
             <a href="#support" className="text-sm hover:text-primary transition-colors">Поддержка</a>
           </nav>
-          {isLoggedIn ? (
-            <Button size="sm" onClick={() => setShowWallet(!showWallet)}>
-              <Icon name="Wallet" size={16} className="mr-2" />
-              Кошелёк
-            </Button>
-          ) : (
-            <Button size="sm" onClick={() => setIsLoggedIn(true)}>
-              <Icon name="LogIn" size={16} className="mr-2" />
-              Войти
-            </Button>
-          )}
+          <div className="flex items-center gap-3">
+            {isLoggedIn ? (
+              <>
+                <Button size="sm" variant="outline" onClick={() => setShowWallet(!showWallet)}>
+                  <Icon name="Wallet" size={16} className="mr-2" />
+                  <span className="hidden sm:inline">Кошелёк</span>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+                      </Avatar>
+                      {isVerified && (
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-accent rounded-full border-2 border-background" />
+                      )}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col">
+                        <span className="font-semibold">Мой профиль</span>
+                        <span className="text-xs text-muted-foreground">user@crypto.com</span>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => setShowWallet(true)}>
+                      <Icon name="Wallet" size={16} className="mr-2" />
+                      Кошелёк
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="History" size={16} className="mr-2" />
+                      История операций
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="Users" size={16} className="mr-2" />
+                      Рефералы
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="ShieldCheck" size={16} className="mr-2" />
+                      {isVerified ? 'Верифицирован' : 'Верификация'}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="Settings" size={16} className="mr-2" />
+                      Настройки
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Icon name="Bell" size={16} className="mr-2" />
+                      Уведомления
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <Icon name="HelpCircle" size={16} className="mr-2" />
+                      Поддержка
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsLoggedIn(false)} className="text-destructive">
+                      <Icon name="LogOut" size={16} className="mr-2" />
+                      Выйти
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <Button size="sm" onClick={() => setIsLoggedIn(true)}>
+                <Icon name="LogIn" size={16} className="mr-2" />
+                Войти
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
