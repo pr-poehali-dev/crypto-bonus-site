@@ -11,6 +11,26 @@ export default function Index() {
   const [fromAmount, setFromAmount] = useState('1000');
   const [toAmount, setToAmount] = useState('50.5');
   const [isVerified, setIsVerified] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
+  const [showWallet, setShowWallet] = useState(false);
+
+  const wallet = {
+    balances: [
+      { currency: 'TON', amount: 125.5, usd: 2487.9, icon: 'Coins' },
+      { currency: 'USDT', amount: 3420.0, usd: 3420.0, icon: 'DollarSign' },
+      { currency: 'BTC', amount: 0.045, usd: 1890.0, icon: 'Bitcoin' },
+      { currency: 'ETH', amount: 1.2, usd: 2280.0, icon: 'Coins' },
+    ],
+    totalUsd: 10077.9,
+  };
+
+  const transactions = [
+    { id: 1, type: 'Обмен', from: 'USDT', to: 'TON', amount: '1000 USDT', received: '50.5 TON', status: 'Завершено', date: '22.10.2024 14:30', success: true },
+    { id: 2, type: 'Пополнение', from: '-', to: 'USDT', amount: '-', received: '5000 USDT', status: 'Завершено', date: '21.10.2024 09:15', success: true },
+    { id: 3, type: 'Верификация', from: 'TON', to: '-', amount: '10 TON', received: '-', status: 'Завершено', date: '20.10.2024 16:45', success: true },
+    { id: 4, type: 'Обмен', from: 'BTC', to: 'ETH', amount: '0.01 BTC', received: '0.2 ETH', status: 'В обработке', date: '22.10.2024 15:20', success: false },
+    { id: 5, type: 'Бонус', from: '-', to: 'TON', amount: '-', received: '50 TON', status: 'Завершено', date: '20.10.2024 16:46', success: true },
+  ];
 
   const stats = [
     { label: 'Объём за 24ч', value: '$2.4M', icon: 'TrendingUp' },
@@ -59,10 +79,17 @@ export default function Index() {
             <a href="#faq" className="text-sm hover:text-primary transition-colors">FAQ</a>
             <a href="#support" className="text-sm hover:text-primary transition-colors">Поддержка</a>
           </nav>
-          <Button size="sm">
-            <Icon name="LogIn" size={16} className="mr-2" />
-            Войти
-          </Button>
+          {isLoggedIn ? (
+            <Button size="sm" onClick={() => setShowWallet(!showWallet)}>
+              <Icon name="Wallet" size={16} className="mr-2" />
+              Кошелёк
+            </Button>
+          ) : (
+            <Button size="sm" onClick={() => setIsLoggedIn(true)}>
+              <Icon name="LogIn" size={16} className="mr-2" />
+              Войти
+            </Button>
+          )}
         </div>
       </header>
 
@@ -96,6 +123,110 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {showWallet && isLoggedIn && (
+        <section id="wallet" className="py-16 px-4 bg-secondary/20">
+          <div className="container mx-auto max-w-6xl">
+            <div className="text-center mb-8">
+              <h3 className="text-3xl font-bold mb-2">Мой кошелёк</h3>
+              <p className="text-muted-foreground">Управляйте своими активами</p>
+            </div>
+
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+              <Card className="lg:col-span-1 border-primary/30">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Icon name="Wallet" size={20} />
+                    Общий баланс
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-4xl font-bold text-primary mb-2">
+                    ${wallet.totalUsd.toLocaleString('ru-RU', { minimumFractionDigits: 2 })}
+                  </div>
+                  <p className="text-sm text-muted-foreground">Эквивалент в USD</p>
+                </CardContent>
+              </Card>
+
+              <Card className="lg:col-span-2">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Icon name="Coins" size={20} />
+                    Активы
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {wallet.balances.map((balance, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-secondary/50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                          <Icon name={balance.icon as any} size={20} className="text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-semibold">{balance.currency}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {balance.amount.toLocaleString('ru-RU', { minimumFractionDigits: balance.currency === 'BTC' ? 3 : 1 })}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">${balance.usd.toLocaleString('ru-RU', { minimumFractionDigits: 2 })}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {((balance.usd / wallet.totalUsd) * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Icon name="History" size={20} />
+                  История операций
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {transactions.map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg hover:bg-secondary/50 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${tx.success ? 'bg-accent/20' : 'bg-muted'}`}>
+                          <Icon 
+                            name={tx.type === 'Обмен' ? 'ArrowRightLeft' : tx.type === 'Пополнение' ? 'ArrowDown' : tx.type === 'Верификация' ? 'ShieldCheck' : 'Gift'} 
+                            size={18} 
+                            className={tx.success ? 'text-accent' : 'text-muted-foreground'} 
+                          />
+                        </div>
+                        <div>
+                          <div className="font-semibold">{tx.type}</div>
+                          <div className="text-sm text-muted-foreground">{tx.date}</div>
+                        </div>
+                      </div>
+                      <div className="text-right hidden sm:block">
+                        <div className="text-sm">
+                          {tx.from !== '-' && <span className="text-muted-foreground">{tx.amount} → </span>}
+                          {tx.to !== '-' && <span className="text-foreground font-medium">{tx.received}</span>}
+                        </div>
+                        <Badge variant={tx.success ? 'default' : 'secondary'} className="text-xs mt-1">
+                          {tx.status}
+                        </Badge>
+                      </div>
+                      <div className="sm:hidden">
+                        <Badge variant={tx.success ? 'default' : 'secondary'} className="text-xs">
+                          {tx.status}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       <section id="exchange" className="py-16 px-4 bg-secondary/30">
         <div className="container mx-auto max-w-2xl">
