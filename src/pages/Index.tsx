@@ -5,6 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { toast } from '@/components/ui/use-toast';
 import Icon from '@/components/ui/icon';
 
 export default function Index() {
@@ -13,6 +16,56 @@ export default function Index() {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [showWallet, setShowWallet] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [depositCurrency, setDepositCurrency] = useState('TON');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawCurrency, setWithdrawCurrency] = useState('TON');
+  const [withdrawAddress, setWithdrawAddress] = useState('');
+  const [showDepositDialog, setShowDepositDialog] = useState(false);
+  const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+
+  const handleDeposit = () => {
+    if (!depositAmount || parseFloat(depositAmount) <= 0) {
+      toast({ title: 'Ошибка', description: 'Укажите сумму пополнения', variant: 'destructive' });
+      return;
+    }
+    
+    if (depositCurrency === 'TON' && parseFloat(depositAmount) >= 10 && !isVerified) {
+      setIsVerified(true);
+      toast({ 
+        title: 'Успех!', 
+        description: `Пополнение на ${depositAmount} ${depositCurrency} в обработке. Аккаунт верифицирован! Бонус +50 TON начислен.`,
+      });
+    } else {
+      toast({ 
+        title: 'Успех!', 
+        description: `Пополнение на ${depositAmount} ${depositCurrency} в обработке`,
+      });
+    }
+    
+    setDepositAmount('');
+    setShowDepositDialog(false);
+  };
+
+  const handleWithdraw = () => {
+    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
+      toast({ title: 'Ошибка', description: 'Укажите сумму вывода', variant: 'destructive' });
+      return;
+    }
+    if (!withdrawAddress) {
+      toast({ title: 'Ошибка', description: 'Укажите адрес кошелька', variant: 'destructive' });
+      return;
+    }
+    
+    toast({ 
+      title: 'Успех!', 
+      description: `Вывод ${withdrawAmount} ${withdrawCurrency} в обработке`,
+    });
+    
+    setWithdrawAmount('');
+    setWithdrawAddress('');
+    setShowWithdrawDialog(false);
+  };
 
   const wallet = {
     balances: [
@@ -144,7 +197,111 @@ export default function Index() {
                   <div className="text-4xl font-bold text-primary mb-2">
                     ${wallet.totalUsd.toLocaleString('ru-RU', { minimumFractionDigits: 2 })}
                   </div>
-                  <p className="text-sm text-muted-foreground">Эквивалент в USD</p>
+                  <p className="text-sm text-muted-foreground mb-4">Эквивалент в USD</p>
+                  <div className="flex gap-2">
+                    <Dialog open={showDepositDialog} onOpenChange={setShowDepositDialog}>
+                      <DialogTrigger asChild>
+                        <Button className="flex-1" size="sm">
+                          <Icon name="Plus" size={14} className="mr-1" />
+                          Пополнить
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Пополнение кошелька</DialogTitle>
+                          <DialogDescription>
+                            {!isVerified && 'Пополните на 10 TON или больше для автоматической верификации и получения бонуса +50 TON'}
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <div className="space-y-2">
+                            <Label>Валюта</Label>
+                            <Tabs value={depositCurrency} onValueChange={setDepositCurrency}>
+                              <TabsList className="grid w-full grid-cols-4">
+                                <TabsTrigger value="TON">TON</TabsTrigger>
+                                <TabsTrigger value="USDT">USDT</TabsTrigger>
+                                <TabsTrigger value="BTC">BTC</TabsTrigger>
+                                <TabsTrigger value="ETH">ETH</TabsTrigger>
+                              </TabsList>
+                            </Tabs>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Сумма</Label>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value)}
+                            />
+                          </div>
+                          {!isVerified && depositCurrency === 'TON' && parseFloat(depositAmount) >= 10 && (
+                            <div className="bg-accent/10 border border-accent rounded-lg p-3">
+                              <div className="flex items-start gap-2">
+                                <Icon name="Gift" size={18} className="text-accent mt-0.5" />
+                                <div className="text-sm">
+                                  <div className="font-semibold text-accent">Бонус за верификацию!</div>
+                                  <div className="text-muted-foreground">После пополнения вы получите +50 TON</div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          <Button onClick={handleDeposit} className="w-full">
+                            Продолжить
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={showWithdrawDialog} onOpenChange={setShowWithdrawDialog}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="flex-1" size="sm">
+                          <Icon name="Minus" size={14} className="mr-1" />
+                          Вывести
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Вывод средств</DialogTitle>
+                          <DialogDescription>
+                            Укажите сумму и адрес кошелька для вывода
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-4">
+                          <div className="space-y-2">
+                            <Label>Валюта</Label>
+                            <Tabs value={withdrawCurrency} onValueChange={setWithdrawCurrency}>
+                              <TabsList className="grid w-full grid-cols-4">
+                                <TabsTrigger value="TON">TON</TabsTrigger>
+                                <TabsTrigger value="USDT">USDT</TabsTrigger>
+                                <TabsTrigger value="BTC">BTC</TabsTrigger>
+                                <TabsTrigger value="ETH">ETH</TabsTrigger>
+                              </TabsList>
+                            </Tabs>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Сумма</Label>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              value={withdrawAmount}
+                              onChange={(e) => setWithdrawAmount(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Адрес кошелька</Label>
+                            <Input
+                              placeholder={`Введите ${withdrawCurrency} адрес`}
+                              value={withdrawAddress}
+                              onChange={(e) => setWithdrawAddress(e.target.value)}
+                            />
+                          </div>
+                          <Button onClick={handleWithdraw} className="w-full">
+                            Вывести средства
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -418,10 +575,30 @@ export default function Index() {
                 </div>
                 <div className="pt-4">
                   {!isVerified ? (
-                    <Button className="w-full" size="lg" onClick={() => setIsVerified(true)}>
-                      <Icon name="Lock" size={18} className="mr-2" />
-                      Верифицировать за 10 TON
-                    </Button>
+                    <div className="space-y-3">
+                      <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 text-sm">
+                        <div className="flex items-start gap-2">
+                          <Icon name="Info" size={16} className="text-primary mt-0.5" />
+                          <div>
+                            <div className="font-semibold text-primary mb-1">Как получить верификацию?</div>
+                            <div className="text-muted-foreground">
+                              Пополните кошелёк на 10 TON или больше через раздел "Кошелёк" и получите автоматическую верификацию + бонус 50 TON
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        className="w-full" 
+                        size="lg" 
+                        onClick={() => {
+                          setShowWallet(true);
+                          setShowDepositDialog(true);
+                        }}
+                      >
+                        <Icon name="ArrowUp" size={18} className="mr-2" />
+                        Пополнить на 10 TON
+                      </Button>
+                    </div>
                   ) : (
                     <Badge className="w-full justify-center py-3 bg-accent text-accent-foreground">
                       <Icon name="CheckCircle" size={18} className="mr-2" />
